@@ -1,0 +1,53 @@
+# Local dev loop only: Postgres + Hasura, no nhost CLI/WSL required.
+# Auth/Storage/Functions/cron run on the linked Nhost Cloud project (see nhost/README.md).
+# Schema + metadata authored here are applied with the Hasura CLI and pushed to GitHub,
+# which Nhost Cloud auto-deploys to the same effect.
+
+services:
+  postgres:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: local
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  graphql-engine:
+    image: hasura/graphql-engine:v2.42.0
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgres@postgres:5432/local
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@postgres:5432/local
+      PG_DATABASE_URL: postgres://postgres:postgres@postgres:5432/local
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: localdevsecret
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: public
+      # Local stand-in for the JWT nhost auth issues in Cloud. Same claim shape
+      # (X-Hasura-User-Id, X-Hasura-Org-Id, X-Hasura-Default-Role/Allowed-Roles)
+      # so metadata/permissions written against this also work against nhost Cloud.
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"local-dev-jwt-secret-please-change-0000000000000000"}'
+      ACTIONS_BASE_URL: http://host.docker.internal:3010
+      ACTIONS_BASE_URL_EVENT_DB: http://host.docker.internal:3010/events/on-external-event
+      ACTIONS_BASE_URL_EVENT_NOTIFY: http://host.docker.internal:3010/events/on-notify-step
+      ACTIONS_WEBHOOK_SECRET: local-dev-actions-secret
+      EVENT_TRIGGER_SECRET: local-event-trigger-secret-change-me
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  pgdata:

@@ -1,0 +1,20 @@
+# Scheduled trigger type. Hasura fires this every minute; the handler looks up
+# workflow_triggers rows of type "scheduled" whose cron expression (stored in
+# config.cron) is due, and starts a run for each — this is the "cron-based, via a
+# scheduled function" trigger type, independent of any specific workflow's config.
+- name: scheduled_workflow_dispatcher
+  webhook: '{{ACTIONS_BASE_URL}}/cron/dispatch-scheduled-runs'
+  schedule: '* * * * *'
+  include_in_metadata: true
+  payload: {}
+  retry_conf:
+    num_retries: 1
+    timeout_seconds: 60
+    tolerance_seconds: 21600
+  headers:
+    - name: x-webhook-secret
+      value_from_env: ACTIONS_WEBHOOK_SECRET
+  comment: >-
+    Fires every minute; dispatch-scheduled-runs checks all enabled
+    workflow_triggers(type=scheduled) whose cron config is due and starts a
+    run for each via the same internal executor triggerWorkflowRun uses.

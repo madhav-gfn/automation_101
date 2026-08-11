@@ -1,0 +1,12 @@
+{
+  "name": "ai-agent-workflow-builder",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "metadata:apply": "node scripts/apply-metadata.mjs"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

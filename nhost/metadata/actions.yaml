@@ -1,0 +1,58 @@
+# Three Hasura Actions, all backed by functions/actions/*.ts (see nhost/README.md
+# for the local dev server that serves them at ACTIONS_BASE_URL).
+#
+# - triggerWorkflowRun: role "user" only. Handler re-checks the caller is
+#   owner/editor in the workflow's org (Layer 1 already limits *readability*, but
+#   Actions bypass table permissions entirely, so the handler must redo this check)
+#   and that the org's quota isn't exhausted, then runs the workflow.
+# - approveStep: role "user" only. Handler checks the approver is owner/editor in
+#   the step's org before resuming — this is the Layer-2 rule that can't live in a
+#   database permission, because it's a decision made mid-execution, not a row
+#   read/write.
+# - webhookTriggerRun: role "public" (unauthenticated) — this is the inbound
+#   webhook trigger. It carries no user JWT at all; instead the handler validates a
+#   per-workflow secret token stored in workflow_triggers.config against the
+#   workflow's enabled "webhook" trigger before running.
+
+- action:
+    name: triggerWorkflowRun
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/actions/trigger-workflow-run'
+      forward_client_headers: true
+      headers:
+        - name: x-webhook-secret
+          value_from_env: ACTIONS_WEBHOOK_SECRET
+      timeout: 120
+    permissions:
+      - role: user
+
+- action:
+    name: approveStep
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/actions/approve-step'
+      forward_client_headers: true
+      headers:
+        - name: x-webhook-secret
+          value_from_env: ACTIONS_WEBHOOK_SECRET
+      timeout: 120
+    permissions:
+      - role: user
+
+- action:
+    name: webhookTriggerRun
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/actions/webhook-trigger-run'
+      forward_client_headers: false
+      headers:
+        - name: x-webhook-secret
+          value_from_env: ACTIONS_WEBHOOK_SECRET
+      timeout: 120
+    permissions:
+      - role: public
+
+# Custom object types (TriggerWorkflowRunOutput, ApproveStepOutput,
+# WebhookTriggerRunOutput) and the Mutation field signatures above are declared as
+# SDL in actions.graphql, which is the file the real Hasura CLI parses for this.
