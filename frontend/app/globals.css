@@ -2,9 +2,13 @@
    Enterprise AI Workflow Builder — Design System (Synthetic Logic)
    ====================================================================== */
 
-/* --- Google Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+/* --- Google Fonts ---
+   Turbopack's CSS bundler only keeps the first top-level @import per file and
+   silently drops the rest, so this MUST stay a single @import with all three
+   families combined — splitting it back into separate @import statements
+   makes the Material Symbols icon font (and therefore every icon in the app)
+   silently fail to load. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 /* ======================================================================
    CSS Custom Properties (Design Tokens)
@@ -237,6 +241,16 @@ table {
 .app-layout {
   display: flex;
   min-height: 100vh;
+}
+
+.app-loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--color-canvas);
+  color: var(--color-on-surface-variant);
+  font-size: 32px;
 }
 
 .main-content {
@@ -695,6 +709,18 @@ table {
   border: 1px solid rgba(144, 143, 160, 0.3);
 }
 
+.badge-paused {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: var(--color-amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-pending {
+  background-color: rgba(144, 143, 160, 0.15);
+  color: var(--color-on-surface-variant);
+  border: 1px solid rgba(144, 143, 160, 0.3);
+}
+
 .badge-running-pill {
   display: inline-flex;
   align-items: center;
@@ -770,6 +796,11 @@ table {
 
 .workflow-node.dimmed {
   opacity: 0.7;
+}
+
+.workflow-node.flow {
+  position: relative;
+  cursor: pointer;
 }
 
 .node-accent {
