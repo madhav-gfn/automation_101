@@ -76,6 +76,9 @@
     - name: organization
       using:
         foreign_key_constraint_on: org_id
+    - name: user
+      using:
+        foreign_key_constraint_on: user_id
   select_permissions:
     - role: user
       permission:
@@ -135,6 +138,9 @@
     - name: org
       using:
         foreign_key_constraint_on: org_id
+    - name: creator
+      using:
+        foreign_key_constraint_on: created_by
     - name: latest_run
       using:
         manual_configuration:
@@ -452,6 +458,9 @@
     - name: organization
       using:
         foreign_key_constraint_on: org_id
+    - name: triggerer
+      using:
+        foreign_key_constraint_on: triggered_by
   array_relationships:
     - name: step_runs
       using:
@@ -493,6 +502,9 @@
     - name: organization
       using:
         foreign_key_constraint_on: org_id
+    - name: approver
+      using:
+        foreign_key_constraint_on: approved_by
   select_permissions:
     - role: user
       permission:
@@ -670,6 +682,35 @@
           - started_at
           - finished_at
           - created_at
+
+# auth.users: tracked read-only, minimally, purely so the frontend can show org-mates'
+# email/display name (team roster, "approved by", "created by") instead of raw uuids.
+# Scoped the same way org_members' own self-referential filter is: a user row is
+# visible only if it belongs to someone who shares an org with the requester.
+- table:
+    schema: auth
+    name: users
+  array_relationships:
+    - name: org_memberships
+      using:
+        foreign_key_constraint_on:
+          column: user_id
+          table:
+            schema: public
+            name: org_members
+  select_permissions:
+    - role: user
+      permission:
+        columns:
+          - id
+          - email
+          - display_name
+        filter:
+          org_memberships:
+            organization:
+              org_members:
+                user_id:
+                  _eq: X-Hasura-User-Id
         filter:
           workflow:
             org:

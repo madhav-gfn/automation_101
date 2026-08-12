@@ -1,83 +1,83 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
+import { useOrg } from "../lib/OrgProvider";
+import { useSubscription } from "../lib/subscriptions";
 
-export const metadata = {
-  title: "Workflow Runs — AI Architect",
-  description: "Monitor and manage workflow execution history",
-};
-
-const runs = [
-  {
-    id: "#RUN-8A92B",
-    status: "running",
-    startTime: "2023-10-27 14:32:01 UTC",
-    duration: "02:14",
-    durationExtra: "...",
-  },
-  {
-    id: "#RUN-8A92A",
-    status: "completed",
-    startTime: "2023-10-27 13:15:22 UTC",
-    duration: "45:12",
-  },
-  {
-    id: "#RUN-8A91F",
-    status: "failed",
-    startTime: "2023-10-27 11:05:10 UTC",
-    duration: "01:03",
-  },
-  {
-    id: "#RUN-8A91E",
-    status: "completed",
-    startTime: "2023-10-26 22:40:00 UTC",
-    duration: "12:30",
-  },
-];
+const RUNS_SUBSCRIPTION = `
+  subscription Runs($orgId: uuid!) {
+    workflow_runs(where: { org_id: { _eq: $orgId } }, order_by: { created_at: desc }, limit: 100) {
+      id
+      workflow_id
+      status
+      trigger_type
+      started_at
+      finished_at
+      created_at
+      workflow {
+        name
+      }
+    }
+  }
+`;
 
 function StatusBadge({ status }) {
-  if (status === "running") {
-    return (
-      <div className="badge badge-running">
+  const map = {
+    running: { cls: "badge-running", icon: null, label: "Running" },
+    pending: { cls: "badge-pending", icon: "schedule", label: "Pending" },
+    paused: { cls: "badge-paused", icon: "pause_circle", label: "Paused" },
+    succeeded: { cls: "badge-completed", icon: "check_circle", label: "Succeeded" },
+    failed: { cls: "badge-failed", icon: "error", label: "Failed" },
+    cancelled: { cls: "badge-inactive", icon: "cancel", label: "Cancelled" },
+  };
+  const m = map[status] ?? { cls: "badge-inactive", icon: null, label: status };
+  return (
+    <div className={`badge ${m.cls}`}>
+      {status === "running" ? (
         <span className="pulse-dot" />
-        <span>Running</span>
-      </div>
-    );
-  }
-  if (status === "completed") {
-    return (
-      <div className="badge badge-completed">
-        <span className="material-symbols-outlined icon-sm">check_circle</span>
-        <span>Completed</span>
-      </div>
-    );
-  }
-  if (status === "failed") {
-    return (
-      <div className="badge badge-failed">
-        <span className="material-symbols-outlined icon-sm">error</span>
-        <span>Failed</span>
-      </div>
-    );
-  }
-  return null;
+      ) : (
+        m.icon && <span className="material-symbols-outlined icon-sm">{m.icon}</span>
+      )}
+      <span>{m.label}</span>
+    </div>
+  );
+}
+
+function formatDuration(startedAt, finishedAt) {
+  if (!startedAt) return "—";
+  const end = finishedAt ? new Date(finishedAt) : new Date();
+  const ms = end - new Date(startedAt);
+  const secs = Math.max(0, Math.round(ms / 1000));
+  const mm = String(Math.floor(secs / 60)).padStart(2, "0");
+  const ss = String(secs % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
 }
 
 export default function RunsPage() {
+  const { currentOrgId, isLoading: orgLoading, memberships } = useOrg();
+  const [search, setSearch] = useState("");
+  const { data, error } = useSubscription(RUNS_SUBSCRIPTION, { orgId: currentOrgId }, { skip: !currentOrgId });
+
+  const runs = useMemo(() => {
+    const all = data?.workflow_runs ?? [];
+    if (!search.trim()) return all;
+    const q = search.trim().toLowerCase();
+    return all.filter((r) => r.id.toLowerCase().includes(q) || r.workflow?.name?.toLowerCase().includes(q));
+  }, [data, search]);
+
   return (
     <div className="app-layout">
       <Sidebar />
-      <TopBar />
+      <TopBar title="Runs" />
 
       <main
         className="main-content-with-topbar dot-grid"
-        style={{
-          overflow: "auto",
-          padding: 24,
-          backgroundColor: "var(--color-surface-dim)",
-        }}
+        style={{ overflow: "auto", padding: 24, backgroundColor: "var(--color-surface-dim)" }}
       >
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          {/* Header */}
           <div
             className="flex justify-between"
             style={{
@@ -89,15 +89,8 @@ export default function RunsPage() {
           >
             <div>
               <h2 className="text-headline-lg">Execution Runs</h2>
-              <p
-                className="text-body-md"
-                style={{
-                  color: "var(--color-on-surface-variant)",
-                  marginTop: 4,
-                }}
-              >
-                Monitor and manage workflow execution history across the
-                organization.
+              <p className="text-body-md" style={{ color: "var(--color-on-surface-variant)", marginTop: 4 }}>
+                Monitor and manage workflow execution history across the organization.
               </p>
             </div>
             <div className="flex gap-3">
@@ -106,120 +99,79 @@ export default function RunsPage() {
                 <input
                   type="text"
                   className="search-input"
-                  placeholder="Search Run ID..."
+                  placeholder="Search Run ID or workflow..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <button className="btn btn-ghost">
-                <span className="material-symbols-outlined icon-sm">
-                  filter_list
-                </span>
-                Filter
-              </button>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="table-container">
-            <div className="gradient-highlight-top" />
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Run ID</th>
-                  <th>Status</th>
-                  <th>Start Time</th>
-                  <th>Duration</th>
-                  <th style={{ textAlign: "right" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {runs.map((run) => (
-                  <tr
-                    key={run.id}
-                    className={run.status === "failed" ? "row-error" : ""}
-                  >
-                    <td
-                      style={{
-                        color:
-                          run.status === "running"
-                            ? "var(--color-primary)"
-                            : "var(--color-on-surface)",
-                        fontWeight: run.status === "running" ? 700 : 500,
-                      }}
-                    >
-                      {run.id}
-                    </td>
-                    <td>
-                      <StatusBadge status={run.status} />
-                    </td>
-                    <td style={{ color: "var(--color-on-surface-variant)" }}>
-                      {run.startTime}
-                    </td>
-                    <td style={{ color: "var(--color-on-surface-variant)" }}>
-                      {run.duration}
-                      {run.durationExtra && (
-                        <span
+          {orgLoading ? (
+            <p className="text-body-md" style={{ color: "var(--color-on-surface-variant)" }}>
+              Loading…
+            </p>
+          ) : memberships.length === 0 ? (
+            <p className="text-body-md" style={{ color: "var(--color-on-surface-variant)" }}>
+              You&apos;re not in an organization yet.
+            </p>
+          ) : error ? (
+            <p className="text-body-md" style={{ color: "var(--color-error)" }}>
+              {error}
+            </p>
+          ) : (
+            <div className="table-container">
+              <div className="gradient-highlight-top" />
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Workflow</th>
+                    <th>Run ID</th>
+                    <th>Status</th>
+                    <th>Trigger</th>
+                    <th>Start Time</th>
+                    <th>Duration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {runs.map((run) => (
+                    <tr key={run.id} className={run.status === "failed" ? "row-error" : ""}>
+                      <td style={{ color: "var(--color-on-surface)" }}>{run.workflow?.name ?? "—"}</td>
+                      <td>
+                        <Link
+                          href={`/runs/${run.id}`}
+                          className="text-label-mono"
                           style={{
-                            color: "var(--color-secondary)",
-                            opacity: 0.7,
-                            marginLeft: 4,
+                            color: run.status === "running" ? "var(--color-primary)" : "var(--color-on-surface)",
+                            fontWeight: run.status === "running" ? 700 : 500,
                           }}
                         >
-                          {run.durationExtra}
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      <div className="row-actions">
-                        <button className="action-btn" title="View Logs">
-                          <span className="material-symbols-outlined icon-sm">
-                            subject
-                          </span>
-                        </button>
-                        {run.status === "running" ? (
-                          <button
-                            className="action-btn action-btn-danger"
-                            title="Stop Run"
-                          >
-                            <span className="material-symbols-outlined icon-sm">
-                              stop_circle
-                            </span>
-                          </button>
-                        ) : (
-                          <button className="action-btn" title="Rerun">
-                            <span className="material-symbols-outlined icon-sm">
-                              replay
-                            </span>
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            <div className="table-footer">
-              <span
-                className="text-label-mono"
-                style={{ color: "var(--color-on-surface-variant)" }}
-              >
-                Showing 1-4 of 128 runs
-              </span>
-              <div className="pagination-btns">
-                <button className="pagination-btn" disabled>
-                  <span className="material-symbols-outlined icon-sm">
-                    chevron_left
-                  </span>
-                </button>
-                <button className="pagination-btn">
-                  <span className="material-symbols-outlined icon-sm">
-                    chevron_right
-                  </span>
-                </button>
-              </div>
+                          #{run.id.slice(0, 8)}
+                        </Link>
+                      </td>
+                      <td>
+                        <StatusBadge status={run.status} />
+                      </td>
+                      <td style={{ color: "var(--color-on-surface-variant)" }}>{run.trigger_type}</td>
+                      <td style={{ color: "var(--color-on-surface-variant)" }}>
+                        {new Date(run.created_at).toLocaleString()}
+                      </td>
+                      <td style={{ color: "var(--color-on-surface-variant)" }}>
+                        {formatDuration(run.started_at, run.finished_at)}
+                      </td>
+                    </tr>
+                  ))}
+                  {runs.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ color: "var(--color-on-surface-variant)", textAlign: "center", padding: 24 }}>
+                        No runs yet. Trigger a workflow from the Builder to see it here.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>
