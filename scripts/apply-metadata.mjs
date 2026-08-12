@@ -30,7 +30,7 @@ const cronTriggers = loadYaml("cron_triggers.yaml").map((c) => ({
   webhook: c.webhook.replace("{{ACTIONS_BASE_URL}}", ACTIONS_BASE_URL),
 }));
 
-const actionDefs = loadYaml("actions.yaml");
+const actionDefs = loadYaml("actions.yaml").actions;
 
 // Mirrors nhost/metadata/actions.graphql by hand (see comment in that file / here):
 // the real Hasura CLI parses the SDL itself; this script isn't the CLI, so the
@@ -72,20 +72,20 @@ const outputFields = {
 };
 
 const actions = actionDefs.map((a) => {
-  const sig = actionSignatures[a.action.name];
+  const sig = actionSignatures[a.name];
   return {
-    name: a.action.name,
+    name: a.name,
     definition: {
-      kind: a.action.definition.kind,
+      kind: a.definition.kind,
       type: "mutation",
       arguments: sig.arguments,
       output_type: sig.output_type,
-      handler: a.action.definition.handler.replace("{{ACTIONS_BASE_URL}}", ACTIONS_BASE_URL),
-      forward_client_headers: a.action.definition.forward_client_headers,
+      handler: a.definition.handler.replace("{{ACTIONS_BASE_URL}}", ACTIONS_BASE_URL),
+      forward_client_headers: a.definition.forward_client_headers,
       headers: [{ name: "x-webhook-secret", value: "local-dev-actions-secret" }],
-      timeout: a.action.definition.timeout,
+      timeout: a.definition.timeout,
     },
-    permissions: a.action.permissions,
+    permissions: a.permissions,
   };
 });
 

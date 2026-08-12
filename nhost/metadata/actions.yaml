@@ -13,9 +13,13 @@
 #   webhook trigger. It carries no user JWT at all; instead the handler validates a
 #   per-workflow secret token stored in workflow_triggers.config against the
 #   workflow's enabled "webhook" trigger before running.
+#
+# Custom object types (TriggerWorkflowRunOutput, ApproveStepOutput,
+# WebhookTriggerRunOutput) and the Mutation field signatures are declared as SDL in
+# actions.graphql, which the real Hasura CLI parses alongside this file.
 
-- action:
-    name: triggerWorkflowRun
+actions:
+  - name: triggerWorkflowRun
     definition:
       kind: synchronous
       handler: '{{ACTIONS_BASE_URL}}/actions/trigger-workflow-run'
@@ -27,8 +31,7 @@
     permissions:
       - role: user
 
-- action:
-    name: approveStep
+  - name: approveStep
     definition:
       kind: synchronous
       handler: '{{ACTIONS_BASE_URL}}/actions/approve-step'
@@ -40,8 +43,7 @@
     permissions:
       - role: user
 
-- action:
-    name: webhookTriggerRun
+  - name: webhookTriggerRun
     definition:
       kind: synchronous
       handler: '{{ACTIONS_BASE_URL}}/actions/webhook-trigger-run'
@@ -53,6 +55,4 @@
     permissions:
       - role: public
 
-# Custom object types (TriggerWorkflowRunOutput, ApproveStepOutput,
-# WebhookTriggerRunOutput) and the Mutation field signatures above are declared as
-# SDL in actions.graphql, which is the file the real Hasura CLI parses for this.
+custom_types: {}
