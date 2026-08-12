@@ -28,7 +28,7 @@ function textToJson(text, fallback) {
   }
 }
 
-export default function NodeConfigPanel({ step, readOnly, onSave, onDelete, onClose }) {
+export default function NodeConfigPanel({ step, readOnly, confirmingDelete, onSave, onDelete, onClose }) {
   const [name, setName] = useState("");
   const [type, setType] = useState("llm_call");
   const [fields, setFields] = useState({});
@@ -294,9 +294,10 @@ export default function NodeConfigPanel({ step, readOnly, onSave, onDelete, onCl
             <button
               className="btn btn-ghost action-btn-danger"
               onClick={() => onDelete()}
-              title="Delete step"
+              title={confirmingDelete ? "Click again to confirm delete" : "Delete step"}
             >
               <span className="material-symbols-outlined icon-sm">delete</span>
+              {confirmingDelete && <span style={{ marginLeft: 4 }}>Confirm?</span>}
             </button>
           </div>
         )}

@@ -46,6 +46,7 @@ export default function SettingsPage() {
   const [error, setError] = useState(null);
   const [inviteUserId, setInviteUserId] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
+  const [confirmingRemoveId, setConfirmingRemoveId] = useState(null);
 
   const load = useCallback(async () => {
     if (!currentOrgId) return;
@@ -97,7 +98,11 @@ export default function SettingsPage() {
   }
 
   async function removeMember(memberId) {
-    if (!window.confirm("Remove this member from the organization?")) return;
+    if (confirmingRemoveId !== memberId) {
+      setConfirmingRemoveId(memberId);
+      return;
+    }
+    setConfirmingRemoveId(null);
     try {
       await gqlRequest(`mutation ($id: uuid!) { delete_org_members_by_pk(id: $id) { id } }`, { id: memberId });
       setMembers((ms) => ms.filter((m) => m.id !== memberId));
@@ -349,8 +354,13 @@ export default function SettingsPage() {
                         </td>
                         <td style={{ textAlign: "right" }}>
                           {isOwner && member.user?.id !== user?.id && (
-                            <button className="action-btn action-btn-danger" title="Remove" onClick={() => removeMember(member.id)}>
+                            <button
+                              className="action-btn action-btn-danger"
+                              title={confirmingRemoveId === member.id ? "Click again to confirm" : "Remove"}
+                              onClick={() => removeMember(member.id)}
+                            >
                               <span className="material-symbols-outlined icon-sm">delete</span>
+                              {confirmingRemoveId === member.id && <span style={{ marginLeft: 4, fontSize: 11 }}>Confirm?</span>}
                             </button>
                           )}
                         </td>

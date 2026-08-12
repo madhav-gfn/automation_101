@@ -7,8 +7,11 @@
    silently drops the rest, so this MUST stay a single @import with all three
    families combined — splitting it back into separate @import statements
    makes the Material Symbols icon font (and therefore every icon in the app)
-   silently fail to load. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+   silently fail to load. Also avoid the comma-separated variable-axis syntax
+   (e.g. ":wght,FILL@100..700,0..1") in this combined URL — Turbopack's CSS
+   parser silently drops the entire @import (not just one family) when it's
+   present, taking Inter/JetBrains Mono down with it. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Material+Symbols+Outlined&display=swap');
 
 /* ======================================================================
    CSS Custom Properties (Design Tokens)

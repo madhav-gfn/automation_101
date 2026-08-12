@@ -89,6 +89,9 @@ export default function BuilderPage() {
   const [newTriggerCron, setNewTriggerCron] = useState("*/5 * * * *");
   const [runStatus, setRunStatus] = useState(null);
   const [banner, setBanner] = useState(null);
+  const [newWorkflowName, setNewWorkflowName] = useState("");
+  const [confirmingDeleteWorkflow, setConfirmingDeleteWorkflow] = useState(false);
+  const [confirmingDeleteStepId, setConfirmingDeleteStepId] = useState(null);
 
   const loadWorkflows = useCallback(async () => {
     if (!currentOrgId) return;
@@ -145,6 +148,7 @@ export default function BuilderPage() {
 
   useEffect(() => {
     loadDetail();
+    setConfirmingDeleteWorkflow(false);
   }, [loadDetail]);
 
   const selectedWorkflow = useMemo(
@@ -157,7 +161,7 @@ export default function BuilderPage() {
   );
 
   async function createWorkflow() {
-    const name = window.prompt("Workflow name?");
+    const name = newWorkflowName.trim();
     if (!name) return;
     try {
       const data = await gqlRequest(
@@ -168,6 +172,7 @@ export default function BuilderPage() {
       );
       await loadWorkflows();
       setSelectedWorkflowId(data.insert_workflows_one.id);
+      setNewWorkflowName("");
     } catch (err) {
       setBanner({ type: "error", text: err.message });
     }
@@ -203,7 +208,11 @@ export default function BuilderPage() {
   }
 
   async function deleteWorkflow() {
-    if (!window.confirm(`Delete workflow "${selectedWorkflow.name}"? This deletes all its runs too.`)) return;
+    if (!confirmingDeleteWorkflow) {
+      setConfirmingDeleteWorkflow(true);
+      return;
+    }
+    setConfirmingDeleteWorkflow(false);
     try {
       await gqlRequest(`mutation ($id: uuid!) { delete_workflows_by_pk(id: $id) { id } }`, {
         id: selectedWorkflowId,
@@ -267,7 +276,11 @@ export default function BuilderPage() {
   }
 
   async function deleteStep() {
-    if (!window.confirm(`Delete step "${selectedStep.name}"?`)) return;
+    if (confirmingDeleteStepId !== selectedStep.id) {
+      setConfirmingDeleteStepId(selectedStep.id);
+      return;
+    }
+    setConfirmingDeleteStepId(null);
     try {
       await gqlRequest(`mutation ($id: uuid!) { delete_workflow_steps_by_pk(id: $id) { id } }`, {
         id: selectedStep.id,
@@ -439,10 +452,23 @@ export default function BuilderPage() {
                   ))}
                 </select>
                 {canEdit && (
-                  <button className="btn btn-ghost" onClick={createWorkflow}>
-                    <span className="material-symbols-outlined icon-sm">add</span>
-                    New Workflow
-                  </button>
+                  <>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ maxWidth: 180 }}
+                      placeholder="New workflow name"
+                      value={newWorkflowName}
+                      onChange={(e) => setNewWorkflowName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") createWorkflow();
+                      }}
+                    />
+                    <button className="btn btn-ghost" onClick={createWorkflow} disabled={!newWorkflowName.trim()}>
+                      <span className="material-symbols-outlined icon-sm">add</span>
+                      Create
+                    </button>
+                  </>
                 )}
                 {selectedWorkflow && canEdit && (
                   <>
@@ -464,8 +490,13 @@ export default function BuilderPage() {
                   </>
                 )}
                 {selectedWorkflow && isOwner && (
-                  <button className="action-btn action-btn-danger" title="Delete workflow" onClick={deleteWorkflow}>
+                  <button
+                    className="action-btn action-btn-danger"
+                    title={confirmingDeleteWorkflow ? "Click again to confirm delete" : "Delete workflow"}
+                    onClick={deleteWorkflow}
+                  >
                     <span className="material-symbols-outlined icon-sm">delete</span>
+                    {confirmingDeleteWorkflow && <span style={{ marginLeft: 4, fontSize: 11 }}>Confirm?</span>}
                   </button>
                 )}
               </div>
@@ -625,6 +656,7 @@ export default function BuilderPage() {
           <NodeConfigPanel
             step={selectedStep}
             readOnly={!canEdit}
+            confirmingDelete={confirmingDeleteStepId === selectedStep.id}
             onSave={saveStep}
             onDelete={deleteStep}
             onClose={() => setSelectedStepId(null)}
