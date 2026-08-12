@@ -42,7 +42,9 @@ export default function WorkflowNode({
   selected,
   dimmed,
   active,
+  flow,
   statusIcon,
+  onClick,
   children,
 }) {
   const nodeClass = [
@@ -50,6 +52,7 @@ export default function WorkflowNode({
     selected && "selected",
     dimmed && "dimmed",
     active && "active",
+    flow && "flow",
   ]
     .filter(Boolean)
     .join(" ");
@@ -57,7 +60,7 @@ export default function WorkflowNode({
   const accentColor = colorMap[type] || "var(--color-primary)";
 
   return (
-    <div className={nodeClass} style={{ top, left }}>
+    <div className={nodeClass} style={flow ? undefined : { top, left }} onClick={onClick}>
       <div className={`node-accent ${accentMap[type] || "node-accent-indigo"}`} />
 
       {/* Header */}

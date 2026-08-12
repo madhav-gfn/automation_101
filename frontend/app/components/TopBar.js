@@ -1,21 +1,17 @@
-export default function TopBar({ children, statusBadge }) {
+export default function TopBar({ title = "Workflow Orchestrator", breadcrumb, statusBadge, right }) {
   return (
     <header className="topbar">
       <div className="topbar-left">
-        <span className="topbar-title">Workflow Orchestrator</span>
-        <div className="topbar-divider" />
-        <nav className="topbar-nav">
-          <a href="#" className="topbar-nav-link">
-            Drafts
-          </a>
-          <a href="#" className="topbar-nav-link active">
-            v1.2.0-stable
-          </a>
-        </nav>
+        <span className="topbar-title">{title}</span>
+        {breadcrumb && (
+          <>
+            <div className="topbar-divider" />
+            <nav className="topbar-nav">{breadcrumb}</nav>
+          </>
+        )}
       </div>
 
       <div className="topbar-right">
-        {/* Optional status badge slot */}
         {statusBadge && <div>{statusBadge}</div>}
 
         <div className="topbar-icon-group">
@@ -27,28 +23,7 @@ export default function TopBar({ children, statusBadge }) {
           </button>
         </div>
 
-        <div className="topbar-actions">
-          <button className="btn btn-ghost">Run</button>
-          <button className="btn btn-primary">Deploy</button>
-          <div className="topbar-avatar">
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                background:
-                  "linear-gradient(135deg, var(--color-primary-container), var(--color-inverse-primary))",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 12,
-                fontWeight: 700,
-                color: "white",
-              }}
-            >
-              JS
-            </div>
-          </div>
-        </div>
+        {right && <div className="topbar-actions">{right}</div>}
       </div>
     </header>
   );
