@@ -1,18 +1,33 @@
 -- AI Agent Workflow Builder — initial schema
 -- Safe to run against a fresh local Postgres OR an Nhost Cloud project that already
--- has the `auth` schema (auth.users) provisioned: the auth.users stand-in below is
--- only created if it doesn't already exist, so it's a no-op on Nhost Cloud.
+-- has the `auth` schema (auth.users) provisioned. On Nhost Cloud, `auth` is owned by
+-- Nhost's own auth service role and our migration role has no privilege on it at all
+-- (not even to check IF NOT EXISTS), so the schema/table creation below is wrapped in
+-- DO blocks that swallow insufficient_privilege — a no-op there. Locally, where we own
+-- everything, it creates the auth.users stand-in for real.
 
 create extension if not exists pgcrypto;
 
-create schema if not exists auth;
+do $$
+begin
+  create schema if not exists auth;
+exception
+  when insufficient_privilege then
+    null; -- auth schema already exists, managed by Nhost Cloud
+end $$;
 
-create table if not exists auth.users (
-  id uuid primary key default gen_random_uuid(),
-  email text unique,
-  display_name text,
-  created_at timestamptz not null default now()
-);
+do $$
+begin
+  create table if not exists auth.users (
+    id uuid primary key default gen_random_uuid(),
+    email text unique,
+    display_name text,
+    created_at timestamptz not null default now()
+  );
+exception
+  when insufficient_privilege then
+    null; -- auth.users already exists, managed by Nhost Cloud
+end $$;
 
 -- ---------- enums ----------
 
