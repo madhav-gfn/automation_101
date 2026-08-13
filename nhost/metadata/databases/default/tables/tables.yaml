@@ -682,6 +682,12 @@
           - started_at
           - finished_at
           - created_at
+        filter:
+          workflow:
+            org:
+              org_members:
+                user_id:
+                  _eq: X-Hasura-User-Id
 
 # auth.users: tracked read-only, minimally, purely so the frontend can show org-mates'
 # email/display name (team roster, "approved by", "created by") instead of raw uuids.
