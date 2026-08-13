@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { useAuth } from "../lib/AuthProvider";
 
+const DEMO_ACCOUNTS = [
+  { role: "Owner", email: "demo.owner@example.com", password: "DemoPass123!" },
+  { role: "Editor", email: "demo.editor@example.com", password: "DemoPass123!" },
+  { role: "Viewer", email: "demo.viewer@example.com", password: "DemoPass123!" },
+];
+
 export default function LoginPage() {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState("signin");
@@ -12,6 +18,14 @@ export default function LoginPage() {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
+
+  function useDemoAccount(account) {
+    setMode("signin");
+    setError(null);
+    setNotice(null);
+    setEmail(account.email);
+    setPassword(account.password);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -42,6 +56,8 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        gap: 24,
+        flexWrap: "wrap",
         background: "var(--color-canvas)",
       }}
     >
@@ -139,6 +155,49 @@ export default function LoginPage() {
           >
             {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
           </button>
+        </div>
+      </div>
+
+      <div
+        style={{
+          width: 320,
+          padding: 24,
+          borderRadius: "var(--radius-lg)",
+          border: "1px solid var(--color-outline-variant)",
+          background: "var(--color-surface)",
+        }}
+      >
+        <h3 className="text-headline-sm" style={{ marginBottom: 4 }}>
+          Try the demo
+        </h3>
+        <p className="text-body-md" style={{ color: "var(--color-on-surface-variant)", marginBottom: 16 }}>
+          No sign-up needed — sign in as a member of &quot;Demo Organization&quot; to explore each role.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {DEMO_ACCOUNTS.map((account) => (
+            <button
+              key={account.email}
+              type="button"
+              onClick={() => useDemoAccount(account)}
+              className="btn btn-ghost"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 2,
+                padding: "10px 12px",
+                border: "1px solid var(--color-outline-variant)",
+              }}
+            >
+              <span className="text-label-mono" style={{ fontSize: 10, color: "var(--color-secondary)" }}>
+                {account.role.toUpperCase()}
+              </span>
+              <span className="text-body-md">{account.email}</span>
+              <span className="text-label-mono" style={{ fontSize: 10, color: "var(--color-on-surface-variant)" }}>
+                {account.password}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
