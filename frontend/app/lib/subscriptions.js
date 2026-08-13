@@ -19,6 +19,12 @@ function getWsClient() {
   return wsClient;
 }
 
+function describeSubscriptionError(err) {
+  if (err?.message) return err.message;
+  if (typeof Event !== "undefined" && err instanceof Event) return "Connection lost, retrying…";
+  return String(err);
+}
+
 export function useSubscription(query, variables, { skip = false } = {}) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -41,7 +47,7 @@ export function useSubscription(query, variables, { skip = false } = {}) {
           }
         },
         error: (err) => {
-          if (active) setError(err?.message || String(err));
+          if (active) setError(describeSubscriptionError(err));
         },
         complete: () => {},
       }
