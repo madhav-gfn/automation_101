@@ -103,7 +103,7 @@ async function runStep(step, context) {
     }
     case "notify": {
       // Deliberately not sent here — see on_step_run_insert_notify event trigger
-      // and functions/events/on-notify-step.mjs, which does the actual send
+      // and functions/events/on-notify-step.js, which does the actual send
       // asynchronously after this row lands, then flips it to succeeded/failed.
       return { output: null, deferred: true };
     }
