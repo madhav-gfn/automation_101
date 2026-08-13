@@ -39,7 +39,7 @@ const RUN_DETAIL_SUBSCRIPTION = `
           name
         }
         approver {
-          display_name
+          displayName
           email
         }
       }
@@ -242,7 +242,7 @@ export default function RunDetailPage({ params }) {
                       )}
                       {sr.approved_at && (
                         <div className="text-label-mono" style={{ fontSize: 10, marginTop: 4, color: "var(--color-secondary)" }}>
-                          Approved by {sr.approver?.display_name || sr.approver?.email} at{" "}
+                          Approved by {sr.approver?.displayName || sr.approver?.email} at{" "}
                           {new Date(sr.approved_at).toLocaleTimeString()}
                         </div>
                       )}

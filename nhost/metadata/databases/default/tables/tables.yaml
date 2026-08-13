@@ -711,9 +711,3 @@
               org_members:
                 user_id:
                   _eq: X-Hasura-User-Id
-        filter:
-          workflow:
-            org:
-              org_members:
-                user_id:
-                  _eq: X-Hasura-User-Id
