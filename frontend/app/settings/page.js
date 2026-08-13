@@ -27,7 +27,7 @@ const SETTINGS_QUERY = `
       user {
         id
         email
-        displayName
+        display_name
       }
     }
   }
@@ -117,7 +117,7 @@ export default function SettingsPage() {
       const data = await gqlRequest(
         `mutation ($orgId: uuid!, $userId: uuid!, $role: org_role!) {
           insert_org_members_one(object: { org_id: $orgId, user_id: $userId, role: $role }) {
-            id role created_at user { id email displayName }
+            id role created_at user { id email display_name }
           }
         }`,
         { orgId: currentOrgId, userId: inviteUserId.trim(), role: inviteRole }
@@ -310,11 +310,11 @@ export default function SettingsPage() {
                         <td>
                           <div className="flex items-center gap-3">
                             <div className="team-avatar">
-                              {(member.user?.displayName || member.user?.email || "?")[0]?.toUpperCase()}
+                              {(member.user?.display_name || member.user?.email || "?")[0]?.toUpperCase()}
                             </div>
                             <div>
                               <div className="text-body-md" style={{ fontWeight: 600, color: "var(--color-on-surface)" }}>
-                                {member.user?.displayName || "(no display name)"}
+                                {member.user?.display_name || "(no display name)"}
                                 {member.user?.id === user?.id && " (you)"}
                               </div>
                               <div className="text-label-mono" style={{ fontSize: 10, color: "var(--color-on-surface-variant)" }}>
