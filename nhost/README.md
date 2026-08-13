@@ -10,10 +10,16 @@ match Nhost's real Functions runtime exactly.
 
 Nhost Cloud deploys `functions/**` automatically on push (same Git integration
 that deploys `nhost/migrations` and `nhost/metadata`). Its router maps every file
-under `functions/` to an HTTP endpoint by path — `functions/actions/foo.mjs`
+under `functions/` to an HTTP endpoint by path — `functions/actions/foo.js`
 becomes reachable at `{ACTIONS_BASE_URL}/actions/foo` — **except** files or
 folders whose name starts with `_`, which are never exposed as routes. That's why
 shared code lives in `functions/_lib/` instead of `functions/lib/`.
+
+Nhost's function discovery only recognizes `.js` and `.ts` files — **not**
+`.mjs` — even though the repo's `"type": "module"` in `package.json` makes plain
+`.js` behave as ESM (so `import`/`export` still works). A `.mjs` file here
+deploys as zero functions with no error, which silently breaks every Action,
+event trigger, and cron trigger that depends on it.
 
 Each handler file's default export is `(req, res) => {}` — a plain
 Express-compatible request handler, same shape Nhost's runtime calls directly in
@@ -41,11 +47,19 @@ dispatcher — works end to end against local Postgres.
 
 ## What has to be configured on Nhost Cloud (not in this repo)
 
-Two secrets the Hasura metadata references via `value_from_env` must exist as
-environment variables on the Nhost Cloud project (Settings → Environment
-Variables / Secrets) — locally these come from `docker-compose.yml`'s
-hardcoded dev values, but Cloud has no equivalent default:
+Unlike local dev (where `docker-compose.yml` hardcodes these), Cloud has no
+default for any of the following — they must be set as Project Environment
+Variables (Settings → Environment Variables):
 
+- `ACTIONS_BASE_URL` — the handler base URL the metadata's `{{ACTIONS_BASE_URL}}`
+  templates resolve against, e.g.
+  `https://<subdomain>.functions.<region>.nhost.run/v1`. Without it, every
+  Action/cron trigger is "inconsistent" and silently disappears from the GraphQL
+  schema (looks like `field 'x' not found in type: 'mutation_root'`, not a
+  permission error).
+- `ACTIONS_BASE_URL_EVENT_DB` / `ACTIONS_BASE_URL_EVENT_NOTIFY` — same idea, but
+  each event trigger's `webhook_from_env` wants the *full* URL including path,
+  e.g. `.../v1/events/on-external-event` and `.../v1/events/on-notify-step`.
 - `ACTIONS_WEBHOOK_SECRET` — sent as `x-webhook-secret` on every Action and cron
   trigger call; handlers reject requests that don't carry the matching value.
 - `EVENT_TRIGGER_SECRET` — same, for the `on_step_run_insert_notify` and
@@ -53,6 +67,6 @@ hardcoded dev values, but Cloud has no equivalent default:
 
 Everything else the handlers need in Cloud (`NHOST_GRAPHQL_URL`,
 `NHOST_ADMIN_SECRET`) is injected automatically by the Functions runtime — see
-`functions/_lib/hasura.mjs`. `GROQ_API_KEY` / `GROQ_MODEL` / `NOTIFY_WEBHOOK_URL`
+`functions/_lib/hasura.js`. `GROQ_API_KEY` / `GROQ_MODEL` / `NOTIFY_WEBHOOK_URL`
 also need to be set as Cloud environment variables for `llm_call` and `notify`
 steps to work there.

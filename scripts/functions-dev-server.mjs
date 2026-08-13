@@ -12,12 +12,12 @@ import http from "node:http";
 const PORT = Number(process.env.FUNCTIONS_PORT || 3010);
 
 const routes = {
-  "/actions/trigger-workflow-run": () => import("../functions/actions/trigger-workflow-run.mjs"),
-  "/actions/approve-step": () => import("../functions/actions/approve-step.mjs"),
-  "/actions/webhook-trigger-run": () => import("../functions/actions/webhook-trigger-run.mjs"),
-  "/events/on-external-event": () => import("../functions/events/on-external-event.mjs"),
-  "/events/on-notify-step": () => import("../functions/events/on-notify-step.mjs"),
-  "/cron/dispatch-scheduled-runs": () => import("../functions/cron/dispatch-scheduled-runs.mjs"),
+  "/actions/trigger-workflow-run": () => import("../functions/actions/trigger-workflow-run.js"),
+  "/actions/approve-step": () => import("../functions/actions/approve-step.js"),
+  "/actions/webhook-trigger-run": () => import("../functions/actions/webhook-trigger-run.js"),
+  "/events/on-external-event": () => import("../functions/events/on-external-event.js"),
+  "/events/on-notify-step": () => import("../functions/events/on-notify-step.js"),
+  "/cron/dispatch-scheduled-runs": () => import("../functions/cron/dispatch-scheduled-runs.js"),
 };
 
 function readBody(req) {

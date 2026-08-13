@@ -4,9 +4,9 @@
 // paused run through resumeWorkflowRun(). All writes use the admin client, since
 // workflow_runs/step_runs have no client-facing write permissions (see
 // nhost/metadata/databases/default/tables/tables.yaml).
-import { adminGraphql } from "./hasura.mjs";
-import { callGroq } from "./groq.mjs";
-import { HttpError } from "./http.mjs";
+import { adminGraphql } from "./hasura.js";
+import { callGroq } from "./groq.js";
+import { HttpError } from "./http.js";
 
 const MAX_ATTEMPTS = 3;
 const BACKOFF_MS = [500, 1500, 4000];

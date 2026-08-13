@@ -1,4 +1,4 @@
-import { HttpError } from "./http.mjs";
+import { HttpError } from "./http.js";
 
 // Every Action/event-trigger webhook call from Hasura carries this header (see
 // nhost/metadata/actions.yaml and cron_triggers.yaml headers: x-webhook-secret).

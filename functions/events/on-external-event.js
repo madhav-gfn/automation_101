@@ -1,7 +1,7 @@
-import { withErrorHandling } from "../_lib/http.mjs";
-import { adminGraphql } from "../_lib/hasura.mjs";
-import { verifyWebhookSecret } from "../_lib/auth.mjs";
-import { startWorkflowRun } from "../_lib/executor.mjs";
+import { withErrorHandling } from "../_lib/http.js";
+import { adminGraphql } from "../_lib/hasura.js";
+import { verifyWebhookSecret } from "../_lib/auth.js";
+import { startWorkflowRun } from "../_lib/executor.js";
 
 // external_events is the stand-in for "a row change in a watched external table"
 // that the database_event trigger type reacts to (see tables.yaml). Each insert

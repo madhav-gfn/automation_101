@@ -1,7 +1,7 @@
-import { withErrorHandling, HttpError } from "../_lib/http.mjs";
-import { adminGraphql } from "../_lib/hasura.mjs";
-import { verifyWebhookSecret, sessionUserId } from "../_lib/auth.mjs";
-import { resumeWorkflowRun } from "../_lib/executor.mjs";
+import { withErrorHandling, HttpError } from "../_lib/http.js";
+import { adminGraphql } from "../_lib/hasura.js";
+import { verifyWebhookSecret, sessionUserId } from "../_lib/auth.js";
+import { resumeWorkflowRun } from "../_lib/executor.js";
 
 // The Layer-2 rule that can't live in a database permission: approving an
 // approval_gate step is a decision made mid-execution, not a row read/write, so

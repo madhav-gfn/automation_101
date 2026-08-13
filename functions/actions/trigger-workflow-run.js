@@ -1,7 +1,7 @@
-import { withErrorHandling, HttpError } from "../_lib/http.mjs";
-import { adminGraphql } from "../_lib/hasura.mjs";
-import { verifyWebhookSecret, sessionUserId } from "../_lib/auth.mjs";
-import { startWorkflowRun } from "../_lib/executor.mjs";
+import { withErrorHandling, HttpError } from "../_lib/http.js";
+import { adminGraphql } from "../_lib/hasura.js";
+import { verifyWebhookSecret, sessionUserId } from "../_lib/auth.js";
+import { startWorkflowRun } from "../_lib/executor.js";
 
 // Hasura Actions bypass table permissions entirely, so this handler redoes the
 // Layer-1 org+role check itself (see nhost/metadata/actions.yaml comment header).

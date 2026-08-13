@@ -1,7 +1,7 @@
 // Admin GraphQL client. All handlers use this exclusively (never a user JWT) —
 // see nhost/metadata tables.yaml: workflow_runs/step_runs have no client-facing
 // insert/update permissions at all, by design, so only the admin secret can write them.
-import { HttpError } from "./http.mjs";
+import { HttpError } from "./http.js";
 
 function graphqlUrl() {
   // Local docker-compose sets HASURA_GRAPHQL_ENDPOINT explicitly.

@@ -1,4 +1,4 @@
-import { HttpError } from "./http.mjs";
+import { HttpError } from "./http.js";
 
 const GROQ_MODEL_DEFAULT = "llama-3.3-70b-versatile";
 

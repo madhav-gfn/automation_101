@@ -1,8 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
-import { withErrorHandling, HttpError } from "../_lib/http.mjs";
-import { adminGraphql } from "../_lib/hasura.mjs";
-import { verifyWebhookSecret } from "../_lib/auth.mjs";
-import { startWorkflowRun } from "../_lib/executor.mjs";
+import { withErrorHandling, HttpError } from "../_lib/http.js";
+import { adminGraphql } from "../_lib/hasura.js";
+import { verifyWebhookSecret } from "../_lib/auth.js";
+import { startWorkflowRun } from "../_lib/executor.js";
 
 // role: public — no user JWT at all. Auth is a per-workflow secret token stored in
 // workflow_triggers.config, checked here (see nhost/metadata/actions.yaml).
